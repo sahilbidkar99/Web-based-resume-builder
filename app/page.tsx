@@ -11,11 +11,8 @@ import {
   GraduationCap,
   Wrench,
   FileText,
-  Mail,
-  Phone,
-  MapPin,
-  Linkedin,
-  Globe
+  Camera, // Imported Camera icon
+  X,      // Imported X icon for removing photo
 } from 'lucide-react';
 
 // --- Components ---
@@ -55,6 +52,7 @@ interface QulificationItem {
 
 interface ResumeData {
   personal: {
+    photo: string; // Added photo field
     fullName: string;
     jobTitle: string;
     email: string;
@@ -71,10 +69,12 @@ interface ResumeData {
 
 export default function App() {
   const [step, setStep] = useState(1);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Initial State
   const [resumeData, setResumeData] = useState<any>({
     personal: {
+      photo: '', // Initialize empty photo
       fullName: '',
       jobTitle: '',
       email: '',
@@ -96,6 +96,32 @@ export default function App() {
       ...prev,
       personal: { ...prev.personal, [name]: value }
     }));
+  };
+
+  // Photo Upload Handler
+  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setResumeData((prev: any) => ({
+          ...prev,
+          personal: { ...prev.personal, photo: reader.result as string }
+        }));
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  // Remove Photo Handler
+  const handleRemovePhoto = () => {
+    setResumeData((prev: any) => ({
+      ...prev,
+      personal: { ...prev.personal, photo: '' }
+    }));
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
   };
 
   const handleSimpleChange = (field: any, value: any) => {
@@ -195,6 +221,52 @@ export default function App() {
               {step === 1 && (
                 <div className="animate-fadeIn">
                   <SectionTitle icon={User} title="Personal Information" subtitle="Let's start with your basics." />
+                  
+                  {/* Photo Upload Section */}
+                  <div className="flex items-center gap-4 mb-6 p-4 bg-slate-50 rounded-lg border border-slate-100">
+                    <div className="relative group">
+                      <div className="w-20 h-20 rounded-full bg-slate-200 flex items-center justify-center overflow-hidden border-2 border-white shadow-sm">
+                        {resumeData.personal.photo ? (
+                          <img 
+                            src={resumeData.personal.photo} 
+                            alt="Profile" 
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <User className="w-8 h-8 text-slate-400" />
+                        )}
+                      </div>
+                      {/* Hidden File Input */}
+                      <input 
+                        type="file" 
+                        ref={fileInputRef}
+                        onChange={handlePhotoUpload}
+                        accept="image/*"
+                        className="hidden"
+                      />
+                    </div>
+                    
+                    <div className="flex flex-col gap-2">
+                      <span className="text-sm font-medium text-slate-700">Profile Photo</span>
+                      <div className="flex gap-2">
+                        <button 
+                          onClick={() => fileInputRef.current?.click()}
+                          className="px-3 py-1.5 bg-white border border-slate-300 rounded-md text-xs font-medium text-slate-700 hover:bg-slate-50 flex items-center gap-1.5"
+                        >
+                          <Camera className="w-3 h-3" /> Upload
+                        </button>
+                        {resumeData.personal.photo && (
+                          <button 
+                            onClick={handleRemovePhoto}
+                            className="px-3 py-1.5 bg-red-50 border border-red-200 rounded-md text-xs font-medium text-red-600 hover:bg-red-100 flex items-center gap-1.5"
+                          >
+                            <X className="w-3 h-3" /> Remove
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <InputGroup label="Full Name">
                       <input
@@ -469,6 +541,18 @@ export default function App() {
 
               {/* Header: Classic Center Layout */}
               <div className="text-center border-b-2 border-slate-900 pb-6 mb-8">
+                
+                {/* --- DISPLAY PHOTO IN PREVIEW --- */}
+                {resumeData.personal.photo && (
+                  <div className="mb-4 flex justify-center">
+                    <img 
+                      src={resumeData.personal.photo} 
+                      alt="Profile" 
+                      className="w-32 h-32 rounded-full object-cover border-4 border-slate-100 shadow-sm"
+                    />
+                  </div>
+                )}
+
                 <h1 className="text-4xl font-bold uppercase tracking-wide text-slate-900 mb-2">
                   {resumeData.personal.fullName || "YOUR NAME"}
                 </h1>
